@@ -17,6 +17,8 @@ type UnitMeasures struct {
 	Speed         string
 	Length        string
 	Precipitation string
+	LongDate      string
+	Hour          string
 }
 
 var (
@@ -27,18 +29,24 @@ var (
 			Speed:         "mph",
 			Length:        "miles",
 			Precipitation: "in/hr",
+			LongDate:      "January 2 at 3:04pm MST",
+			Hour:          "3:04pm MST",
 		},
 		"si": {
 			Degrees:       "°C",
 			Speed:         "m/s",
 			Length:        "kilometers",
 			Precipitation: "mm/h",
+			LongDate:      "2006-01-02 15:04:05 EET",
+			Hour:          "15:04 EET",
 		},
 		"ca": {
 			Degrees:       "°C",
 			Speed:         "km/h",
 			Length:        "kilometers",
 			Precipitation: "mm/h",
+			LongDate:      "January 2 at 3:04pm MST",
+			Hour:          "3:04pm MST",
 		},
 		// deprecated, use "uk2" in stead
 		"uk": {
@@ -46,12 +54,16 @@ var (
 			Speed:         "mph",
 			Length:        "kilometers",
 			Precipitation: "mm/h",
+			LongDate:      "January 2 at 15:04 MST",
+			Hour:          "15:04 MST",
 		},
 		"uk2": {
 			Degrees:       "°C",
 			Speed:         "mph",
 			Length:        "miles",
 			Precipitation: "mm/h",
+			LongDate:      "January 2 at 15:04 MST",
+			Hour:          "15:04 MST",
 		},
 	}
 	// Directions contain all the combinations of N,S,E,W
@@ -60,9 +72,9 @@ var (
 	}
 )
 
-func epochFormat(seconds int64) string {
+func epochFormat(seconds int64, unitsFormat UnitMeasures) string {
 	epochTime := time.Unix(0, seconds*int64(time.Second))
-	return epochTime.Format("January 2 at 3:04pm MST")
+	return epochTime.Format(unitsFormat.LongDate)
 }
 
 func epochFormatDate(seconds int64) string {
@@ -70,9 +82,9 @@ func epochFormatDate(seconds int64) string {
 	return epochTime.Format("January 2 (Monday)")
 }
 
-func epochFormatTime(seconds int64) string {
+func epochFormatTime(seconds int64, unitsFormat UnitMeasures) string {
 	epochTime := time.Unix(0, seconds*int64(time.Second))
-	return epochTime.Format("3:04pm MST")
+	return epochTime.Format(unitsFormat.Hour)
 }
 
 func getIcon(iconStr string) (icon string, err error) {
@@ -197,7 +209,7 @@ func PrintCurrent(forecast Forecast, geolocation geocode.Geocode, ignoreAlerts b
 	}
 
 	location := colorstring.Color(fmt.Sprintf("[green]%s in %s", geolocation.City, geolocation.Region))
-	fmt.Printf("\nCurrent weather is %s in %s for %s\n", colorstring.Color("[cyan]"+forecast.Currently.Summary), location, colorstring.Color("[cyan]"+epochFormat(forecast.Currently.Time)))
+	fmt.Printf("\nCurrent weather is %s in %s for %s\n", colorstring.Color("[cyan]"+forecast.Currently.Summary), location, colorstring.Color("[cyan]"+epochFormat(forecast.Currently.Time, unitsFormat)))
 
 	temp := colorstring.Color(fmt.Sprintf("[magenta]%v%s", forecast.Currently.Temperature, unitsFormat.Degrees))
 	feelslike := colorstring.Color(fmt.Sprintf("[magenta]%v%s", forecast.Currently.ApparentTemperature, unitsFormat.Degrees))
@@ -215,8 +227,8 @@ func PrintCurrent(forecast Forecast, geolocation geocode.Geocode, ignoreAlerts b
 			if alert.Description != "" {
 				fmt.Print(colorstring.Color("[red]" + alert.Description))
 			}
-			fmt.Println("\t\t\t" + colorstring.Color("[red]Created: "+epochFormat(alert.Time)))
-			fmt.Println("\t\t\t" + colorstring.Color("[red]Expires: "+epochFormat(alert.Expires)) + "\n")
+			fmt.Println("\t\t\t" + colorstring.Color("[red]Created: "+epochFormat(alert.Time, unitsFormat)))
+			fmt.Println("\t\t\t" + colorstring.Color("[red]Expires: "+epochFormat(alert.Expires, unitsFormat)) + "\n")
 		}
 	}
 
@@ -240,8 +252,8 @@ func PrintDaily(forecast Forecast, days int) error {
 		tempMin := colorstring.Color(fmt.Sprintf("[blue]%v%s", daily.TemperatureMin, unitsFormat.Degrees))
 		feelsLikeMax := colorstring.Color(fmt.Sprintf("[cyan]%v%s", daily.ApparentTemperatureMax, unitsFormat.Degrees))
 		feelsLikeMin := colorstring.Color(fmt.Sprintf("[cyan]%v%s", daily.ApparentTemperatureMin, unitsFormat.Degrees))
-		fmt.Printf("The temperature high is %s, feels like %s around %s,\n", tempMax, feelsLikeMax, epochFormatTime(daily.TemperatureMaxTime))
-		fmt.Printf("and low is %s, feels like %s around %s\n\n", tempMin, feelsLikeMin, epochFormatTime(daily.TemperatureMinTime))
+		fmt.Printf("The temperature high is %s, feels like %s around %s,\n", tempMax, feelsLikeMax, epochFormatTime(daily.TemperatureMaxTime, unitsFormat))
+		fmt.Printf("and low is %s, feels like %s around %s\n\n", tempMin, feelsLikeMin, epochFormatTime(daily.TemperatureMinTime, unitsFormat))
 
 		printCommon(daily, unitsFormat)
 	}
